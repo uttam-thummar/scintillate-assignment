@@ -19,6 +19,17 @@ const colors = {
         700: '#220a0a',
         800: '#160606',
         900: '#0b0303'
+    },
+    coffee: {
+        100: '#ede5d9',
+        200: '#dbccb4',
+        300: '#cab28e',
+        400: '#b89969',
+        500: '#a67f43',
+        600: '#856636',
+        700: '#644c28',
+        800: '#42331b',
+        900: '#21190d',
     }
 }
 
@@ -36,6 +47,14 @@ const borderRadius = {
     },
 }
 
-const theme = extendTheme({ breakpoints, colors, ...borderRadius });
+const components = {
+    Button: {
+        defaultProps: {
+            colorScheme: 'dark_sienna'
+        }
+    }
+}
+
+const theme = extendTheme({ breakpoints, colors, ...borderRadius, components });
 
 export { theme };

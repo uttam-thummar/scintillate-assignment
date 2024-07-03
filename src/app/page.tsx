@@ -1,113 +1,162 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { Box, Button, ButtonGroup, Grid, GridItem, IconButton, Stack, useToast } from "@chakra-ui/react";
+import Navbar from "@/components/Navbar";
+import { useEffect, useRef, useState } from "react";
+import { API } from "@/lib/Api";
+import { AxiosResponse } from "axios";
+import PeopleCard, { PeopleCardSkeleton } from "@/components/PeopleCard";
+import { ArrowLeftIcon, ArrowRightIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
+import { getDataFromLocalStorage } from "@/components/localstorage";
+
+export default function People() {
+  const toast = useToast();
+  const contentDivRef = useRef<HTMLDivElement | null>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [people, setPeople] = useState<Array<People>>([]);
+  const [favoritePeople, setFavoritePeople] = useState<Array<string>>([]);
+
+  const handleCurrentPageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    if (contentDivRef.current) {
+      contentDivRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }
+
+  useEffect(() => {
+    const getStarWarsPeopleList = async () => {
+      try {
+        setIsLoading(true);
+        const endpoint: string = `https://swapi.dev/api/people?page=${currentPage}`;
+        const response: AxiosResponse = await API.get(endpoint);
+
+        if (response.data.count !== undefined) {
+          setPeople(response.data.results);
+          if (currentPage === 1) {
+            setTotalPages(Math.ceil(response.data.count / response.data.results.length));
+          }
+
+          const favoritePeopleLocalStorage: Array<string> = getDataFromLocalStorage('favoritePeople') || [];
+          setFavoritePeople(favoritePeopleLocalStorage);
+
+          setIsLoading(false);
+        } else {
+          setIsLoading(false);
+          toast({
+            title: response.data.message || "Something went wrong",
+            description: "Please try after sometime!",
+            status: 'error',
+            variant: 'left-accent',
+            position: 'top-right'
+          });
+        }
+      } catch (error: any) {
+        setIsLoading(false);
+        console.log('Error:', error);
+        toast({
+          title: error?.response?.data?.message || "Something went wrong",
+          description: "Please try after sometime!",
+          status: 'error',
+          variant: 'left-accent',
+          position: 'top-right'
+        });
+      }
+    }
+
+    getStarWarsPeopleList();
+  }, [currentPage, toast]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    <>
+      <Navbar />
+      <Box ref={contentDivRef} bg="dark_sienna.100" sx={{
+        width: '100vw',
+        height: 'calc(100vh - 90px)',
+        overflowY: 'auto'
+      }}>
+        <Stack maxWidth={'1800px'} width={'100%'} p={4} justifyContent={'center'} alignItems={'center'} gap={'60px'}>
+          <Grid templateColumns={{
+            base: 'repeat(1, 1fr)',
+            md: 'repeat(2, 1fr)',
+            lg: 'repeat(3, 1fr)',
+            '2xl': 'repeat(4, 1fr)',
+          }} gap={6}>
+            {isLoading ? (
+              Array.from({ length: 10 }).map((_, index) => (
+                <GridItem key={index} w='100%'>
+                  <PeopleCardSkeleton isLoaded={!isLoading} />
+                </GridItem>
+              ))
+            ) : (
+              people.map((p, index) => (
+                <GridItem key={index} w='100%'>
+                  <PeopleCard
+                    people={p}
+                    favoritePeople={{ get: favoritePeople, set: setFavoritePeople }}
+                  />
+                </GridItem>
+              ))
+            )}
+          </Grid>
+          {totalPages && (
+            <Box>
+              <ButtonGroup spacing={2} justifyContent={'end'} width={'100%'}>
+                <IconButton
+                  variant='solid'
+                  borderRadius={'sm'}
+                  colorScheme='coffee'
+                  aria-label='first'
+                  fontSize='20px'
+                  isDisabled={currentPage === 1}
+                  icon={<ArrowLeftIcon />}
+                  onClick={() => handleCurrentPageChange(1)}
+                />
+                <IconButton
+                  variant='solid'
+                  borderRadius={'sm'}
+                  colorScheme='coffee'
+                  aria-label='previous'
+                  fontSize='20px'
+                  isDisabled={currentPage === 1}
+                  icon={<ChevronLeftIcon />}
+                  onClick={() => handleCurrentPageChange(currentPage - 1)}
+                />
+                {Array.from({ length: totalPages }).map((_, index) => (
+                  <Button key={index} variant={'solid'} colorScheme={currentPage === index + 1 ? 'dark_sienna' : 'coffee'} borderRadius={'sm'} onClick={() => handleCurrentPageChange(index + 1)}>
+                    {index + 1}
+                  </Button>
+                ))}
+                <IconButton
+                  variant='solid'
+                  borderRadius={'sm'}
+                  colorScheme='coffee'
+                  aria-label='next'
+                  fontSize='20px'
+                  isDisabled={currentPage === totalPages}
+                  icon={<ChevronRightIcon />}
+                  onClick={() => handleCurrentPageChange(currentPage + 1)}
+                />
+                <IconButton
+                  variant='solid'
+                  borderRadius={'sm'}
+                  colorScheme='coffee'
+                  aria-label='last'
+                  fontSize='20px'
+                  isDisabled={currentPage === totalPages}
+                  icon={<ArrowRightIcon />}
+                  onClick={() => handleCurrentPageChange(totalPages)}
+                />
+              </ButtonGroup>
+            </Box>
+          )}
+        </Stack>
+      </Box>
+    </>
   );
 }
