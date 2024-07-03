@@ -13,8 +13,12 @@
 /.next/
 /out/
 
+# development
+.env.development
+
 # production
 /build
+.env
 
 # misc
 .DS_Store
