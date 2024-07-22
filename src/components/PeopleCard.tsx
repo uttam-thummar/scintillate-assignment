@@ -1,8 +1,11 @@
+'use client';
+
 import React from 'react';
-import { Badge, Box, Button, ButtonGroup, Card, CardBody, CardFooter, Divider, Flex, HStack, Heading, IconButton, Image, Skeleton, SkeletonCircle, SkeletonText, Stack } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
+import { Badge, Box, Button, ButtonGroup, Card, CardBody, CardFooter, Divider, Flex, HStack, Heading, IconButton, Image, Skeleton, SkeletonCircle, SkeletonText, Stack, Tooltip } from '@chakra-ui/react';
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
-import { getDataFromLocalStorage, saveDataToLocalStorage } from './localstorage';
 import { getRandomNumber } from '@/lib/helper';
+import { getDataFromLocalStorage, saveDataToLocalStorage } from '@/lib/localstorage';
 
 const PeopleCard: React.FC<{
     people: People,
@@ -11,6 +14,28 @@ const PeopleCard: React.FC<{
         set: Function
     }
 }> = ({ people, favoritePeople }) => {
+    const router = useRouter();
+
+    const handleViewDetails = () => {
+        const urlParts = people.url.split('/');
+        const id = urlParts[urlParts.length - 2];
+        router.push(`/people/${id}`);
+    }
+
+    const handleFavorite = () => {
+        if (people) {
+            let favoritePeopleLocalStorage: Array<string> = getDataFromLocalStorage('favoritePeople') || [];
+            if (favoritePeople.get.includes(people.name)) {
+                favoritePeople.set(favoritePeople.get.filter((n) => n !== people.name));
+                favoritePeopleLocalStorage = favoritePeopleLocalStorage.filter((n) => n !== people.name);
+            } else {
+                favoritePeople.set((prev: Array<string>) => ([...prev, people.name]));
+                favoritePeopleLocalStorage.push(people.name);
+            }
+            saveDataToLocalStorage('favoritePeople', favoritePeopleLocalStorage, true);
+        }
+    }
+
     return (
         <>
             <Card maxW='sm' sx={{ position: 'relative', overflow: 'hidden' }}>
@@ -23,16 +48,19 @@ const PeopleCard: React.FC<{
                     zIndex: 99
                 }}></Box>
                 <CardBody>
+                    {/* Note: there is not any image coming from the api so used random images from the assets */}
                     <Image
                         src={`/assets/images/characters/character${getRandomNumber()}.jpg`}
-                        alt='Green double couch with wooden legs'
+                        alt='Starwars characters'
                         height={'250px'}
                         borderRadius='lg'
                         objectFit={'cover'}
                         objectPosition={'center center'}
                     />
                     <Stack mt='6' spacing='3'>
-                        <Heading size='lg'>{people.name}</Heading>
+                        <Heading size='sm' sx={{
+                            fontFamily: 'var(--font-press-start-2p)'
+                        }}>{people.name}</Heading>
                         <Stack gap={0}>
                             <HStack mt={4}>
                                 <Badge colorScheme='blue' variant={'solid'}>Height</Badge>
@@ -68,24 +96,20 @@ const PeopleCard: React.FC<{
                 <Divider />
                 <CardFooter>
                     <ButtonGroup spacing='2' justifyContent={'space-between'} width={'100%'}>
-                        <Button variant='solid' bg={'dark_sienna.400'} borderRadius={'sm'}>
+                        <Button variant='solid' bg={'dark_sienna.400'} borderRadius={'sm'} onClick={handleViewDetails}>
                             View Details
                         </Button>
-                        <IconButton
-                            isRound={true}
-                            variant='outline'
-                            colorScheme='red'
-                            aria-label='Favourite'
-                            fontSize='20px'
-                            icon={favoritePeople.get.includes(people.name) ? <MdFavorite /> : <MdFavoriteBorder />}
-                            onClick={() => {
-                                favoritePeople.set((prev: Array<string>) => ([...prev, people.name]));
-
-                                const favoritePeopleLocalStorage: Array<string> = getDataFromLocalStorage('favoritePeople') || [];
-                                favoritePeopleLocalStorage.push(people.name);
-                                saveDataToLocalStorage('favoritePeople', favoritePeopleLocalStorage, true);
-                            }}
-                        />
+                        <Tooltip hasArrow label='Add to favorites' bg='black' color='white' placement='top'>
+                            <IconButton
+                                isRound={true}
+                                variant='outline'
+                                colorScheme='red'
+                                aria-label='Favourite'
+                                fontSize='20px'
+                                icon={favoritePeople.get.includes(people.name) ? <MdFavorite /> : <MdFavoriteBorder />}
+                                onClick={handleFavorite}
+                            />
+                        </Tooltip>
                     </ButtonGroup>
                 </CardFooter>
             </Card>

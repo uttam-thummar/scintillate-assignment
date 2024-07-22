@@ -1,13 +1,12 @@
 'use client';
 
-import { Box, Button, ButtonGroup, Grid, GridItem, IconButton, Stack, useToast } from "@chakra-ui/react";
-import Navbar from "@/components/Navbar";
 import { useEffect, useRef, useState } from "react";
-import { API } from "@/lib/Api";
-import { AxiosResponse } from "axios";
-import PeopleCard, { PeopleCardSkeleton } from "@/components/PeopleCard";
 import { ArrowLeftIcon, ArrowRightIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { getDataFromLocalStorage } from "@/components/localstorage";
+import { Box, Button, ButtonGroup, Grid, GridItem, IconButton, Stack, Text, useToast } from "@chakra-ui/react";
+import { AxiosResponse } from "axios";
+import { API } from "@/lib/Api";
+import { getDataFromLocalStorage } from "@/lib/localstorage";
+import PeopleCard, { PeopleCardSkeleton } from "@/components/PeopleCard";
 
 export default function People() {
   const toast = useToast();
@@ -74,13 +73,12 @@ export default function People() {
 
   return (
     <>
-      <Navbar />
       <Box ref={contentDivRef} bg="dark_sienna.100" sx={{
         width: '100vw',
         height: 'calc(100vh - 90px)',
         overflowY: 'auto'
       }}>
-        <Stack maxWidth={'1800px'} width={'100%'} p={4} justifyContent={'center'} alignItems={'center'} gap={'60px'}>
+        <Stack maxWidth={'1800px'} width={'100%'} p={4} justifyContent={'center'} gap={'60px'}>
           <Grid templateColumns={{
             base: 'repeat(1, 1fr)',
             md: 'repeat(2, 1fr)',
@@ -105,8 +103,9 @@ export default function People() {
             )}
           </Grid>
           {totalPages && (
-            <Box>
-              <ButtonGroup spacing={2} justifyContent={'end'} width={'100%'}>
+            <Stack alignItems={'center'}>
+              <Text size={'xl'} fontWeight={'bold'}>Page {currentPage} of {totalPages}</Text>
+              <ButtonGroup spacing={2} justifyContent={'center'} width={'100%'}>
                 <IconButton
                   variant='solid'
                   borderRadius={'sm'}
@@ -128,7 +127,7 @@ export default function People() {
                   onClick={() => handleCurrentPageChange(currentPage - 1)}
                 />
                 {Array.from({ length: totalPages }).map((_, index) => (
-                  <Button key={index} variant={'solid'} colorScheme={currentPage === index + 1 ? 'dark_sienna' : 'coffee'} borderRadius={'sm'} onClick={() => handleCurrentPageChange(index + 1)}>
+                  <Button key={index} variant={'solid'} colorScheme={currentPage === index + 1 ? 'dark_sienna' : 'coffee'} borderRadius={'sm'} display={{ sm: 'none', lg: 'block' }} onClick={() => handleCurrentPageChange(index + 1)}>
                     {index + 1}
                   </Button>
                 ))}
@@ -153,7 +152,7 @@ export default function People() {
                   onClick={() => handleCurrentPageChange(totalPages)}
                 />
               </ButtonGroup>
-            </Box>
+            </Stack>
           )}
         </Stack>
       </Box>
